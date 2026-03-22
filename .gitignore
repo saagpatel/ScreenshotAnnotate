@@ -32,3 +32,5 @@ src-tauri/WixTools
 
 # Local audit workspace
 .codex_audit/
+.firecrawl/
+.perf-results/

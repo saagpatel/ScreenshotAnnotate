@@ -24,7 +24,7 @@
     "git:guard:generated": "bash scripts/git/guard-generated.sh",
     "git:guard:large-files": "bash scripts/git/guard-large-files.sh",
     "git:guard:secrets": "bash scripts/git/guard-secrets.sh",
-    "git:guard:all": "pnpm git:guard:branch && pnpm git:guard:atomic && pnpm git:guard:generated && pnpm git:guard:large-files && pnpm git:guard:secrets",
+    "git:guard:all": "npm run git:guard:branch && npm run git:guard:atomic && npm run git:guard:generated && npm run git:guard:large-files && npm run git:guard:secrets",
     "git:commit:propose": "node scripts/git/propose-commit-message.mjs",
     "git:session:save": "bash scripts/git/session-save.sh",
     "git:session:resume": "bash scripts/git/session-resume.sh",
@@ -33,6 +33,8 @@
     "perf:build": "node scripts/perf/measure-build-time.mjs",
     "perf:assets": "bash scripts/perf/check-assets.sh",
     "perf:memory": "node --expose-gc scripts/perf/memory-smoke.mjs",
+    "perf:lhci": "lhci autorun --config=lighthouserc.json",
+    "perf:lhci:prod": "lhci autorun --config=.lighthouserc.production.json",
     "perf:summary": "node scripts/perf/summarize.mjs",
     "lint-staged": "lint-staged"
   },
