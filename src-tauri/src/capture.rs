@@ -3,6 +3,7 @@ use std::process::Command;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CaptureResult {
     pub temp_path: String,
     pub width: u32,
@@ -60,5 +61,23 @@ pub fn cleanup_temp_files() {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CaptureResult;
+
+    #[test]
+    fn capture_result_serializes_in_camel_case() {
+        let value = serde_json::to_value(CaptureResult {
+            temp_path: "/tmp/capture.png".to_string(),
+            width: 100,
+            height: 50,
+        })
+        .expect("serialize capture result");
+
+        assert_eq!(value["tempPath"], "/tmp/capture.png");
+        assert!(value.get("temp_path").is_none());
     }
 }

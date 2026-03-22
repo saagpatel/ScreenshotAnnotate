@@ -2,6 +2,7 @@ use image::ImageFormat;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ExportResult {
     pub annotated_path: String,
     pub thumbnail_path: String,
@@ -79,4 +80,23 @@ fn base64_decode(input: &str) -> Result<Vec<u8>, String> {
     general_purpose::STANDARD
         .decode(base64_data)
         .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ExportResult;
+
+    #[test]
+    fn export_result_serializes_in_camel_case() {
+        let value = serde_json::to_value(ExportResult {
+            annotated_path: "/tmp/annotated.png".to_string(),
+            thumbnail_path: "/tmp/thumbnail.png".to_string(),
+        })
+        .expect("serialize export result");
+
+        assert_eq!(value["annotatedPath"], "/tmp/annotated.png");
+        assert_eq!(value["thumbnailPath"], "/tmp/thumbnail.png");
+        assert!(value.get("annotated_path").is_none());
+        assert!(value.get("thumbnail_path").is_none());
+    }
 }

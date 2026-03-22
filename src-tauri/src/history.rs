@@ -7,6 +7,7 @@ const STORAGE_BUDGET_MB: u64 = 500;
 const STORAGE_BUDGET_BYTES: u64 = STORAGE_BUDGET_MB * 1024 * 1024;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct ScreenshotMeta {
     pub id: String,
     pub original_path: String,
@@ -20,6 +21,7 @@ pub struct ScreenshotMeta {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct StorageUsage {
     pub used_bytes: u64,
     pub budget_bytes: u64,
@@ -338,6 +340,52 @@ fn enforce_storage_budget() -> Result<(), String> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod serialization_tests {
+    use super::{ScreenshotMeta, StorageUsage};
+
+    #[test]
+    fn screenshot_meta_serializes_in_camel_case() {
+        let value = serde_json::to_value(ScreenshotMeta {
+            id: "test-id".to_string(),
+            original_path: "/tmp/original.png".to_string(),
+            annotated_path: Some("/tmp/annotated.png".to_string()),
+            thumbnail_path: "/tmp/thumbnail.png".to_string(),
+            created_at: "2026-03-22T00:00:00Z".to_string(),
+            ticket_id: Some("PROJ-123".to_string()),
+            uploaded_url: Some("https://example.test/ticket".to_string()),
+            size_bytes: 42,
+            annotation_count: 3,
+        })
+        .expect("serialize screenshot meta");
+
+        assert_eq!(value["originalPath"], "/tmp/original.png");
+        assert_eq!(value["thumbnailPath"], "/tmp/thumbnail.png");
+        assert_eq!(value["createdAt"], "2026-03-22T00:00:00Z");
+        assert_eq!(value["ticketId"], "PROJ-123");
+        assert_eq!(value["uploadedUrl"], "https://example.test/ticket");
+        assert_eq!(value["sizeBytes"], 42);
+        assert_eq!(value["annotationCount"], 3);
+        assert!(value.get("original_path").is_none());
+        assert!(value.get("uploaded_url").is_none());
+    }
+
+    #[test]
+    fn storage_usage_serializes_in_camel_case() {
+        let value = serde_json::to_value(StorageUsage {
+            used_bytes: 128,
+            budget_bytes: 256,
+            item_count: 2,
+        })
+        .expect("serialize storage usage");
+
+        assert_eq!(value["usedBytes"], 128);
+        assert_eq!(value["budgetBytes"], 256);
+        assert_eq!(value["itemCount"], 2);
+        assert!(value.get("used_bytes").is_none());
+    }
 }
 
 #[cfg(test)]
