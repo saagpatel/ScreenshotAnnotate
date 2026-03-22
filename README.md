@@ -4,26 +4,37 @@ A macOS desktop screenshot annotation tool built with Tauri 2 + React 19 that co
 
 ## Features
 
-### ✅ Phase 0 + 1 (COMPLETE)
+### Current shipped surface
 
 **Screenshot Capture:**
-- Global hotkey `⌘⇧5` (Cmd+Shift+5) triggers native macOS screenshot capture
+
+- `Capture Screenshot` button launches native macOS screenshot capture
+- Global shortcut `⌘⇧A` is attempted when macOS allows it
 - Interactive region selection with native crosshair
 - Automatic temp file management
 
 **Interactive Annotation:**
-- 4 annotation tools: Arrow (with arrowhead), Rectangle, Text, Freehand
+
+- 5 annotation tools: Arrow (with arrowhead), Rectangle, Text, Freehand, Redact
 - Undo/Redo stack (50 steps)
 - Color picker (4 presets + custom hex)
 - Thickness control (1-8px)
 - Keyboard shortcuts: `A`/`R`/`T`/`F` for tools, `⌘Z`/`⇧⌘Z` for undo/redo
 
 **Export + History:**
+
 - Save annotated screenshots as PNG
 - Local file-based storage (500MB budget with LRU eviction)
 - Searchable thumbnail gallery
 - Storage usage tracking
 - Delete with confirmation
+
+**Release-safe extras:**
+
+- OCR-assisted PII detection
+- Blackout redaction for detected or manual regions
+- Jira/Zendesk credential storage and upload flow
+- Templates, theme, and saved default annotation preferences
 
 ## Installation
 
@@ -31,7 +42,7 @@ A macOS desktop screenshot annotation tool built with Tauri 2 + React 19 that co
 
 - macOS 13+ (Ventura or later)
 - Node.js 18+
-- Rust 1.70+ (install via [rustup](https://rustup.rs/))
+- Rust 1.77.2+ (install via [rustup](https://rustup.rs/))
 
 ### Setup
 
@@ -97,7 +108,7 @@ On first launch, macOS will prompt you to grant **Screen Recording** permission:
 
 ## Usage
 
-1. **Capture**: Press `⌘⇧5` (or click "Capture Screenshot")
+1. **Capture**: Click "Capture Screenshot" (global shortcut `⌘⇧A` is best-effort on macOS)
 2. **Select region**: Drag to select the area (native macOS crosshair)
 3. **Annotate**: Draw arrows, rectangles, text, or freehand
 4. **Save**: Click "Save" button or press `⌘S`
@@ -105,21 +116,22 @@ On first launch, macOS will prompt you to grant **Screen Recording** permission:
 
 ## Keyboard Shortcuts
 
-| Action | Shortcut |
-|--------|----------|
-| Capture screenshot | `⌘⇧5` |
-| Switch to Arrow tool | `A` |
-| Switch to Rectangle tool | `R` |
-| Switch to Text tool | `T` |
-| Switch to Freehand tool | `F` |
-| Undo | `⌘Z` |
-| Redo | `⌘⇧Z` |
-| Save | `⌘S` |
-| Cancel | `Esc` |
+| Action                   | Shortcut               |
+| ------------------------ | ---------------------- |
+| Capture screenshot       | `⌘⇧A` (when available) |
+| Switch to Arrow tool     | `A`                    |
+| Switch to Rectangle tool | `R`                    |
+| Switch to Text tool      | `T`                    |
+| Switch to Freehand tool  | `F`                    |
+| Undo                     | `⌘Z`                   |
+| Redo                     | `⌘⇧Z`                  |
+| Save                     | `⌘S`                   |
+| Cancel                   | `Esc`                  |
 
 ## Development Roadmap
 
 ### ✅ Phase 0: Screenshot Capture + Annotation (COMPLETE)
+
 - macOS screenshot capture via `screencapture` CLI
 - Interactive SVG annotation canvas
 - 4 annotation tools (arrow, rectangle, text, freehand)
@@ -127,29 +139,33 @@ On first launch, macOS will prompt you to grant **Screen Recording** permission:
 - Keyboard shortcuts
 
 ### ✅ Phase 1: Export + History (COMPLETE)
+
 - Export annotated screenshots as PNG (html-to-image + Rust compositing)
 - Local file-based history (500MB budget)
 - Thumbnail gallery with search
 - Storage usage tracking
 - LRU eviction
 
-### 📋 Phase 2: PII Detection + Redaction (NEXT)
+### 🚧 Phase 2: PII Detection + Redaction
+
 - Tesseract.js OCR (WASM-based)
 - Auto-detect email, phone, IP, credit card
-- Manual redaction tool
-- Blur/pixelate/blackbox styles
+- Manual blackout redaction tool
+- Release-safe black box style enabled
 
-### 📋 Phase 3: Jira/Zendesk Upload
+### 🚧 Phase 3: Jira/Zendesk Upload
+
 - API client for Jira Cloud + Zendesk
 - OAuth token management (macOS Keychain)
 - Ticket auto-detection from clipboard
 - Upload confirmation + URL copy
 
-### 📋 Phase 4: Templates + Polish
+### 🚧 Phase 4: Templates + Polish
+
 - 3 built-in templates (Error Highlight, Click Here, Step by Step)
 - Dark/light mode
-- Settings panel (hotkey config, retention, API credentials)
-- History cleanup (auto-delete after N days)
+- Settings panel (defaults, theme, API credentials)
+- History cleanup (future)
 
 ## Tech Stack
 
@@ -157,16 +173,18 @@ On first launch, macOS will prompt you to grant **Screen Recording** permission:
 - **Backend**: Rust, Tauri 2
 - **Screenshot**: macOS `screencapture` CLI
 - **Storage**: File-based (~/Library/Application Support/)
-- **Future**: tesseract.js (OCR), macOS Keychain (credentials)
+- **Current**: tesseract.js (OCR), macOS Keychain (credentials)
 
 ## Storage Location
 
 Screenshots are saved to:
+
 ```
 ~/Library/Application Support/com.screenshot-annotate/history/
 ```
 
 Each screenshot is stored in a self-contained directory with:
+
 - `original.png` - unmodified capture
 - `annotated.png` - final export with annotations
 - `thumbnail.png` - 200px-wide preview
@@ -176,6 +194,7 @@ Each screenshot is stored in a self-contained directory with:
 ## Performance
 
 All targets met on M4 Pro:
+
 - Hotkey → crosshair: ~350ms ✅
 - Annotation rendering: <16ms ✅
 - Export + save: ~400ms ✅
@@ -210,6 +229,6 @@ MIT
 
 ---
 
-**Current Status**: Phase 1 complete ✅  
-**Next**: Phase 2 (PII Detection + Redaction) - ETA 4 days  
-**Total LOC**: ~2,200 (Phase 0 + 1)
+**Current Status**: Local build, unit tests, and Rust tests are green.  
+**Known limitation**: Global shortcut registration can be blocked by macOS, so the capture button is the guaranteed path.  
+**Release posture**: Black box redaction is treated as the safe release mode.

@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import type { ScreenshotMeta, StorageUsage } from '../types';
+import { useState, useCallback } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import type { ScreenshotMeta, StorageUsage } from "../types";
 
 export function useHistory() {
   const [loading, setLoading] = useState(false);
@@ -18,7 +18,7 @@ export function useHistory() {
       setError(null);
 
       try {
-        const id = await invoke<string>('save_to_history', {
+        const id = await invoke<string>("save_to_history", {
           originalPath,
           annotatedPath,
           thumbnailPath,
@@ -43,7 +43,7 @@ export function useHistory() {
       setError(null);
 
       try {
-        const results = await invoke<ScreenshotMeta[]>('get_history', {
+        const results = await invoke<ScreenshotMeta[]>("get_history", {
           search: search || null,
           limit: limit || 20,
         });
@@ -59,36 +59,67 @@ export function useHistory() {
     [],
   );
 
-  const deleteFromHistory = useCallback(async (id: string): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
+  const deleteFromHistory = useCallback(
+    async (id: string): Promise<boolean> => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      await invoke('delete_from_history', { id });
-      setLoading(false);
-      return true;
-    } catch (err) {
-      setError(String(err));
-      setLoading(false);
-      return false;
-    }
-  }, []);
+      try {
+        await invoke("delete_from_history", { id });
+        setLoading(false);
+        return true;
+      } catch (err) {
+        setError(String(err));
+        setLoading(false);
+        return false;
+      }
+    },
+    [],
+  );
 
-  const getStorageUsage = useCallback(async (): Promise<StorageUsage | null> => {
-    try {
-      const usage = await invoke<StorageUsage>('get_storage_usage');
-      return usage;
-    } catch (err) {
-      setError(String(err));
-      return null;
-    }
-  }, []);
+  const getStorageUsage =
+    useCallback(async (): Promise<StorageUsage | null> => {
+      try {
+        const usage = await invoke<StorageUsage>("get_storage_usage");
+        return usage;
+      } catch (err) {
+        setError(String(err));
+        return null;
+      }
+    }, []);
+
+  const updateHistoryMetadata = useCallback(
+    async (
+      id: string,
+      ticketId: string | null,
+      uploadedUrl: string | null,
+    ): Promise<boolean> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        await invoke("update_history_metadata", {
+          id,
+          ticketId,
+          uploadedUrl,
+        });
+        setLoading(false);
+        return true;
+      } catch (err) {
+        setError(String(err));
+        setLoading(false);
+        return false;
+      }
+    },
+    [],
+  );
 
   return {
     saveToHistory,
     getHistory,
     deleteFromHistory,
     getStorageUsage,
+    updateHistoryMetadata,
     loading,
     error,
   };

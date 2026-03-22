@@ -189,6 +189,36 @@ pub async fn get_storage_usage() -> Result<StorageUsage, String> {
     })
 }
 
+#[tauri::command]
+pub async fn update_history_metadata(
+    id: String,
+    ticket_id: Option<String>,
+    uploaded_url: Option<String>,
+) -> Result<(), String> {
+    let normalized_id = parse_history_id(&id)?.to_string();
+    let history_dir = get_history_dir()?;
+    let screenshot_dir = history_dir.join(&normalized_id);
+    let mut index = load_index()?;
+
+    let Some(meta) = index.iter_mut().find(|entry| entry.id == normalized_id) else {
+        return Err("History entry not found".to_string());
+    };
+
+    meta.ticket_id = ticket_id;
+    meta.uploaded_url = uploaded_url;
+
+    if screenshot_dir.exists() {
+        let meta_path = screenshot_dir.join("meta.json");
+        write_meta(&meta_path, meta)?;
+    }
+
+    let index_path = get_index_path()?;
+    let json = serde_json::to_string_pretty(&index).map_err(|e| e.to_string())?;
+    fs::write(&index_path, json).map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 // Helper functions
 
 fn get_history_dir() -> Result<PathBuf, String> {
@@ -239,6 +269,13 @@ fn update_index(meta: &ScreenshotMeta) -> Result<(), String> {
     let json = serde_json::to_string_pretty(&index).map_err(|e| e.to_string())?;
     fs::write(&index_path, json).map_err(|e| e.to_string())?;
 
+    Ok(())
+}
+
+fn write_meta(path: &PathBuf, meta: &ScreenshotMeta) -> Result<(), String> {
+    let meta_json =
+        serde_json::to_string_pretty(meta).map_err(|e| format!("Failed to serialize metadata: {}", e))?;
+    fs::write(path, meta_json).map_err(|e| format!("Failed to write metadata: {}", e))?;
     Ok(())
 }
 

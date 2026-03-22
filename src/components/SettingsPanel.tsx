@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { useState, useEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { CAPTURE_HOTKEY_LABEL } from "../lib/hotkeys";
+import type { AppPreferences } from "../lib/preferences";
 
 interface SettingsPanelProps {
   onClose: () => void;
+  preferences: AppPreferences;
+  onSavePreferences: (preferences: AppPreferences) => void;
 }
 
 interface ValidationRequest {
@@ -12,98 +16,101 @@ interface ValidationRequest {
   api_token: string;
 }
 
-export function SettingsPanel({ onClose }: SettingsPanelProps) {
+export function SettingsPanel({
+  onClose,
+  preferences,
+  onSavePreferences,
+}: SettingsPanelProps) {
   // Jira settings
-  const [jiraBaseUrl, setJiraBaseUrl] = useState('');
-  const [jiraEmail, setJiraEmail] = useState('');
-  const [jiraApiToken, setJiraApiToken] = useState('');
+  const [jiraBaseUrl, setJiraBaseUrl] = useState("");
+  const [jiraEmail, setJiraEmail] = useState("");
+  const [jiraApiToken, setJiraApiToken] = useState("");
   const [jiraValidationStatus, setJiraValidationStatus] = useState<
-    'idle' | 'testing' | 'success' | 'error'
-  >('idle');
-  const [jiraValidationError, setJiraValidationError] = useState('');
+    "idle" | "testing" | "success" | "error"
+  >("idle");
+  const [jiraValidationError, setJiraValidationError] = useState("");
 
   // Zendesk settings
-  const [zendeskSubdomain, setZendeskSubdomain] = useState('');
-  const [zendeskEmail, setZendeskEmail] = useState('');
-  const [zendeskApiToken, setZendeskApiToken] = useState('');
+  const [zendeskSubdomain, setZendeskSubdomain] = useState("");
+  const [zendeskEmail, setZendeskEmail] = useState("");
+  const [zendeskApiToken, setZendeskApiToken] = useState("");
   const [zendeskValidationStatus, setZendeskValidationStatus] = useState<
-    'idle' | 'testing' | 'success' | 'error'
-  >('idle');
-  const [zendeskValidationError, setZendeskValidationError] = useState('');
+    "idle" | "testing" | "success" | "error"
+  >("idle");
+  const [zendeskValidationError, setZendeskValidationError] = useState("");
 
   // General settings
-  const [defaultColor, setDefaultColor] = useState('#FF0000');
+  const [defaultColor, setDefaultColor] = useState("#FF0000");
   const [defaultThickness, setDefaultThickness] = useState(3);
-  const [historyRetentionDays, setHistoryRetentionDays] = useState(30);
-  const [storageBudgetMb, setStorageBudgetMb] = useState(500);
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
+  const [theme, setTheme] = useState<"light" | "dark" | "system">(
+    preferences.theme,
+  );
 
   // Load credentials on mount
   useEffect(() => {
     loadCredentials();
   }, []);
 
-  // Apply theme to document
   useEffect(() => {
-    if (theme === 'system') {
-      document.documentElement.removeAttribute('data-theme');
-    } else {
-      document.documentElement.setAttribute('data-theme', theme);
-    }
-  }, [theme]);
+    setDefaultColor(preferences.defaultColor);
+    setDefaultThickness(preferences.defaultThickness);
+    setTheme(preferences.theme);
+  }, [preferences]);
 
   const loadCredentials = async () => {
     try {
       // Load Jira credentials
-      const jiraUrl = (await invoke('get_credential', {
-        service: 'jira_base_url',
+      const jiraUrl = (await invoke("get_credential", {
+        service: "jira_base_url",
       })) as string | null;
-      const jEmail = (await invoke('get_credential', { service: 'jira_email' })) as string | null;
-      const jToken = (await invoke('get_credential', {
-        service: 'jira_api_token',
+      const jEmail = (await invoke("get_credential", {
+        service: "jira_email",
+      })) as string | null;
+      const jToken = (await invoke("get_credential", {
+        service: "jira_api_token",
       })) as string | null;
 
       if (jiraUrl) setJiraBaseUrl(jiraUrl);
       if (jEmail) setJiraEmail(jEmail);
-      if (jToken) setJiraApiToken('••••••••'); // Don't show actual token
+      if (jToken) setJiraApiToken("••••••••"); // Don't show actual token
 
       // Load Zendesk credentials
-      const zendeskSub = (await invoke('get_credential', {
-        service: 'zendesk_subdomain',
+      const zendeskSub = (await invoke("get_credential", {
+        service: "zendesk_subdomain",
       })) as string | null;
-      const zEmail = (await invoke('get_credential', {
-        service: 'zendesk_email',
+      const zEmail = (await invoke("get_credential", {
+        service: "zendesk_email",
       })) as string | null;
-      const zToken = (await invoke('get_credential', {
-        service: 'zendesk_api_token',
+      const zToken = (await invoke("get_credential", {
+        service: "zendesk_api_token",
       })) as string | null;
 
       if (zendeskSub) setZendeskSubdomain(zendeskSub);
       if (zEmail) setZendeskEmail(zEmail);
-      if (zToken) setZendeskApiToken('••••••••'); // Don't show actual token
+      if (zToken) setZendeskApiToken("••••••••"); // Don't show actual token
     } catch (err) {
-      console.error('Failed to load credentials:', err);
+      console.error("Failed to load credentials:", err);
     }
   };
 
   const saveJiraCredentials = async () => {
     try {
-      await invoke('store_credential', {
-        service: 'jira_base_url',
+      await invoke("store_credential", {
+        service: "jira_base_url",
         token: jiraBaseUrl.trim(),
       });
-      await invoke('store_credential', {
-        service: 'jira_email',
+      await invoke("store_credential", {
+        service: "jira_email",
         token: jiraEmail.trim(),
       });
       // Only save API token if it's not the masked value
-      if (jiraApiToken !== '••••••••') {
-        await invoke('store_credential', {
-          service: 'jira_api_token',
+      if (jiraApiToken !== "••••••••") {
+        await invoke("store_credential", {
+          service: "jira_api_token",
           token: jiraApiToken.trim(),
         });
       }
-      alert('Jira credentials saved!');
+      alert("Jira credentials saved!");
     } catch (err) {
       alert(`Failed to save Jira credentials: ${err}`);
     }
@@ -111,109 +118,118 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
 
   const saveZendeskCredentials = async () => {
     try {
-      await invoke('store_credential', {
-        service: 'zendesk_subdomain',
+      await invoke("store_credential", {
+        service: "zendesk_subdomain",
         token: zendeskSubdomain.trim(),
       });
-      await invoke('store_credential', {
-        service: 'zendesk_email',
+      await invoke("store_credential", {
+        service: "zendesk_email",
         token: zendeskEmail.trim(),
       });
       // Only save API token if it's not the masked value
-      if (zendeskApiToken !== '••••••••') {
-        await invoke('store_credential', {
-          service: 'zendesk_api_token',
+      if (zendeskApiToken !== "••••••••") {
+        await invoke("store_credential", {
+          service: "zendesk_api_token",
           token: zendeskApiToken.trim(),
         });
       }
-      alert('Zendesk credentials saved!');
+      alert("Zendesk credentials saved!");
     } catch (err) {
       alert(`Failed to save Zendesk credentials: ${err}`);
     }
   };
 
   const testJiraConnection = async () => {
-    setJiraValidationStatus('testing');
-    setJiraValidationError('');
+    setJiraValidationStatus("testing");
+    setJiraValidationError("");
 
     try {
       // Get the actual token (not masked)
       let tokenToUse = jiraApiToken;
-      if (jiraApiToken === '••••••••') {
-        const storedToken = (await invoke('get_credential', {
-          service: 'jira_api_token',
+      if (jiraApiToken === "••••••••") {
+        const storedToken = (await invoke("get_credential", {
+          service: "jira_api_token",
         })) as string | null;
         if (!storedToken) {
-          setJiraValidationStatus('error');
-          setJiraValidationError('No API token configured');
+          setJiraValidationStatus("error");
+          setJiraValidationError("No API token configured");
           return;
         }
         tokenToUse = storedToken;
       }
 
       const validationRequest: ValidationRequest = {
-        service: 'jira',
+        service: "jira",
         base_url: jiraBaseUrl.trim(),
         email: jiraEmail.trim(),
         api_token: tokenToUse,
       };
 
-      const isValid = (await invoke('validate_credentials', {
+      const isValid = (await invoke("validate_credentials", {
         request: validationRequest,
       })) as boolean;
 
       if (isValid) {
-        setJiraValidationStatus('success');
+        setJiraValidationStatus("success");
       } else {
-        setJiraValidationStatus('error');
-        setJiraValidationError('Authentication failed');
+        setJiraValidationStatus("error");
+        setJiraValidationError("Authentication failed");
       }
     } catch (err) {
-      setJiraValidationStatus('error');
+      setJiraValidationStatus("error");
       setJiraValidationError(String(err));
     }
   };
 
   const testZendeskConnection = async () => {
-    setZendeskValidationStatus('testing');
-    setZendeskValidationError('');
+    setZendeskValidationStatus("testing");
+    setZendeskValidationError("");
 
     try {
       // Get the actual token (not masked)
       let tokenToUse = zendeskApiToken;
-      if (zendeskApiToken === '••••••••') {
-        const storedToken = (await invoke('get_credential', {
-          service: 'zendesk_api_token',
+      if (zendeskApiToken === "••••••••") {
+        const storedToken = (await invoke("get_credential", {
+          service: "zendesk_api_token",
         })) as string | null;
         if (!storedToken) {
-          setZendeskValidationStatus('error');
-          setZendeskValidationError('No API token configured');
+          setZendeskValidationStatus("error");
+          setZendeskValidationError("No API token configured");
           return;
         }
         tokenToUse = storedToken;
       }
 
       const validationRequest: ValidationRequest = {
-        service: 'zendesk',
+        service: "zendesk",
         base_url: zendeskSubdomain.trim(),
         email: zendeskEmail.trim(),
         api_token: tokenToUse,
       };
 
-      const isValid = (await invoke('validate_credentials', {
+      const isValid = (await invoke("validate_credentials", {
         request: validationRequest,
       })) as boolean;
 
       if (isValid) {
-        setZendeskValidationStatus('success');
+        setZendeskValidationStatus("success");
       } else {
-        setZendeskValidationStatus('error');
-        setZendeskValidationError('Authentication failed');
+        setZendeskValidationStatus("error");
+        setZendeskValidationError("Authentication failed");
       }
     } catch (err) {
-      setZendeskValidationStatus('error');
+      setZendeskValidationStatus("error");
       setZendeskValidationError(String(err));
     }
+  };
+
+  const savePreferences = () => {
+    onSavePreferences({
+      defaultColor,
+      defaultThickness,
+      theme,
+    });
+    alert("General preferences saved!");
   };
 
   return (
@@ -263,16 +279,20 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             <button
               className="btn-primary"
               onClick={testJiraConnection}
-              disabled={jiraValidationStatus === 'testing'}
+              disabled={jiraValidationStatus === "testing"}
             >
-              {jiraValidationStatus === 'testing' ? 'Testing...' : 'Test Connection'}
+              {jiraValidationStatus === "testing"
+                ? "Testing..."
+                : "Test Connection"}
             </button>
           </div>
-          {jiraValidationStatus === 'success' && (
+          {jiraValidationStatus === "success" && (
             <div className="validation-success">✓ Connection successful!</div>
           )}
-          {jiraValidationStatus === 'error' && (
-            <div className="validation-error">✗ {jiraValidationError || 'Connection failed'}</div>
+          {jiraValidationStatus === "error" && (
+            <div className="validation-error">
+              ✗ {jiraValidationError || "Connection failed"}
+            </div>
           )}
         </section>
 
@@ -313,17 +333,19 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             <button
               className="btn-primary"
               onClick={testZendeskConnection}
-              disabled={zendeskValidationStatus === 'testing'}
+              disabled={zendeskValidationStatus === "testing"}
             >
-              {zendeskValidationStatus === 'testing' ? 'Testing...' : 'Test Connection'}
+              {zendeskValidationStatus === "testing"
+                ? "Testing..."
+                : "Test Connection"}
             </button>
           </div>
-          {zendeskValidationStatus === 'success' && (
+          {zendeskValidationStatus === "success" && (
             <div className="validation-success">✓ Connection successful!</div>
           )}
-          {zendeskValidationStatus === 'error' && (
+          {zendeskValidationStatus === "error" && (
             <div className="validation-error">
-              ✗ {zendeskValidationError || 'Connection failed'}
+              ✗ {zendeskValidationError || "Connection failed"}
             </div>
           )}
         </section>
@@ -338,7 +360,10 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               value={defaultColor}
               onChange={(e) => setDefaultColor(e.target.value)}
             />
-            <span className="color-preview" style={{ backgroundColor: defaultColor }} />
+            <span
+              className="color-preview"
+              style={{ backgroundColor: defaultColor }}
+            />
           </div>
           <div className="form-group">
             <label>Default Thickness: {defaultThickness}px</label>
@@ -351,35 +376,34 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             />
           </div>
           <div className="form-group">
-            <label>History Retention</label>
-            <select
-              value={historyRetentionDays}
-              onChange={(e) => setHistoryRetentionDays(Number(e.target.value))}
-            >
-              <option value={7}>7 days</option>
-              <option value={14}>14 days</option>
-              <option value={30}>30 days</option>
-              <option value={90}>90 days</option>
-            </select>
+            <label>Capture Hotkey</label>
+            <input type="text" value={CAPTURE_HOTKEY_LABEL} disabled />
           </div>
           <div className="form-group">
-            <label>Storage Budget: {storageBudgetMb} MB</label>
+            <label>History Storage</label>
             <input
-              type="range"
-              min="100"
-              max="2000"
-              step="100"
-              value={storageBudgetMb}
-              onChange={(e) => setStorageBudgetMb(Number(e.target.value))}
+              type="text"
+              value="500 MB fixed budget for this release"
+              disabled
             />
           </div>
           <div className="form-group">
             <label>Theme</label>
-            <select value={theme} onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'system')}>
+            <select
+              value={theme}
+              onChange={(e) =>
+                setTheme(e.target.value as "light" | "dark" | "system")
+              }
+            >
               <option value="system">System (Auto)</option>
               <option value="light">Light</option>
               <option value="dark">Dark</option>
             </select>
+          </div>
+          <div className="settings-actions">
+            <button className="btn-primary" onClick={savePreferences}>
+              Save Preferences
+            </button>
           </div>
         </section>
       </div>

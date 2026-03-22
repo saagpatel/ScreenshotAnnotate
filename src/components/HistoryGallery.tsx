@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { convertFileSrc } from '@tauri-apps/api/core';
-import { useHistory } from '../hooks/useHistory';
-import type { ScreenshotMeta, StorageUsage } from '../types';
+import { useState, useEffect } from "react";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { useHistory } from "../hooks/useHistory";
+import { CAPTURE_HOTKEY_LABEL } from "../lib/hotkeys";
+import type { ScreenshotMeta, StorageUsage } from "../types";
 
 interface HistoryGalleryProps {
   onClose: () => void;
@@ -9,9 +10,10 @@ interface HistoryGalleryProps {
 
 export function HistoryGallery({ onClose }: HistoryGalleryProps) {
   const [screenshots, setScreenshots] = useState<ScreenshotMeta[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [storageUsage, setStorageUsage] = useState<StorageUsage | null>(null);
-  const { getHistory, deleteFromHistory, getStorageUsage, loading } = useHistory();
+  const { getHistory, deleteFromHistory, getStorageUsage, loading } =
+    useHistory();
 
   useEffect(() => {
     loadHistory();
@@ -38,7 +40,7 @@ export function HistoryGallery({ onClose }: HistoryGalleryProps) {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this screenshot? This cannot be undone.')) {
+    if (!confirm("Delete this screenshot? This cannot be undone.")) {
       return;
     }
 
@@ -58,22 +60,22 @@ export function HistoryGallery({ onClose }: HistoryGalleryProps) {
     const diffDays = Math.floor(diffMs / 86400000);
 
     if (diffMins < 60) {
-      return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+      return `${diffMins} minute${diffMins !== 1 ? "s" : ""} ago`;
     } else if (diffHours < 24) {
-      return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+      return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
     } else if (diffDays < 7) {
-      return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+      return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
     } else {
       return date.toLocaleDateString();
     }
   };
 
   const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
   return (
@@ -105,8 +107,10 @@ export function HistoryGallery({ onClose }: HistoryGalleryProps) {
             />
           </div>
           <div className="storage-text">
-            {formatBytes(storageUsage.usedBytes)} / {formatBytes(storageUsage.budgetBytes)} used
-            ({storageUsage.itemCount} screenshot{storageUsage.itemCount !== 1 ? 's' : ''})
+            {formatBytes(storageUsage.usedBytes)} /{" "}
+            {formatBytes(storageUsage.budgetBytes)} used (
+            {storageUsage.itemCount} screenshot
+            {storageUsage.itemCount !== 1 ? "s" : ""})
           </div>
         </div>
       )}
@@ -117,7 +121,7 @@ export function HistoryGallery({ onClose }: HistoryGalleryProps) {
         <div className="empty-state">
           {searchTerm
             ? `No screenshots match "${searchTerm}"`
-            : 'No screenshots yet. Press ⌘⇧5 to capture your first screenshot.'}
+            : `No screenshots yet. Return to the main screen and use Capture Screenshot${CAPTURE_HOTKEY_LABEL ? ` or ${CAPTURE_HOTKEY_LABEL}` : ""} to create your first entry.`}
         </div>
       )}
 
@@ -131,7 +135,9 @@ export function HistoryGallery({ onClose }: HistoryGalleryProps) {
               />
             </div>
             <div className="history-meta">
-              <div className="history-date">{formatDate(screenshot.createdAt)}</div>
+              <div className="history-date">
+                {formatDate(screenshot.createdAt)}
+              </div>
               {screenshot.ticketId && (
                 <div className="history-ticket">{screenshot.ticketId}</div>
               )}
@@ -140,7 +146,7 @@ export function HistoryGallery({ onClose }: HistoryGalleryProps) {
               )}
               <div className="history-stats">
                 {screenshot.annotationCount} annotation
-                {screenshot.annotationCount !== 1 ? 's' : ''}
+                {screenshot.annotationCount !== 1 ? "s" : ""}
               </div>
             </div>
             <div className="history-actions">

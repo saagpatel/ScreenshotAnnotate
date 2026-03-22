@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import { writeText, readText } from '@tauri-apps/plugin-clipboard-manager';
+import { useState, useEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { writeText, readText } from "@tauri-apps/plugin-clipboard-manager";
 
 interface UploadWizardProps {
   filePath: string;
   onClose: () => void;
-  onSuccess: (ticketUrl: string) => void;
+  onSuccess: (result: UploadSuccess) => void;
 }
 
 interface UploadRequest {
@@ -23,10 +23,20 @@ interface UploadResult {
   attachment_url: string;
 }
 
-export function UploadWizard({ filePath, onClose, onSuccess }: UploadWizardProps) {
-  const [service, setService] = useState<'jira' | 'zendesk'>('jira');
-  const [ticketId, setTicketId] = useState('');
-  const [comment, setComment] = useState('');
+interface UploadSuccess {
+  ticketId: string;
+  ticketUrl: string;
+  service: "jira" | "zendesk";
+}
+
+export function UploadWizard({
+  filePath,
+  onClose,
+  onSuccess,
+}: UploadWizardProps) {
+  const [service, setService] = useState<"jira" | "zendesk">("jira");
+  const [ticketId, setTicketId] = useState("");
+  const [comment, setComment] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successUrl, setSuccessUrl] = useState<string | null>(null);
@@ -45,14 +55,14 @@ export function UploadWizard({ filePath, onClose, onSuccess }: UploadWizardProps
 
         if (jiraPattern.test(clipboardText.trim())) {
           setTicketId(clipboardText.trim());
-          setService('jira');
+          setService("jira");
         } else if (zendeskPattern.test(clipboardText.trim())) {
           setTicketId(clipboardText.trim());
-          setService('zendesk');
+          setService("zendesk");
         }
       } catch (err) {
         // Clipboard read failed, ignore
-        console.error('Failed to read clipboard:', err);
+        console.error("Failed to read clipboard:", err);
       }
     };
 
@@ -60,7 +70,7 @@ export function UploadWizard({ filePath, onClose, onSuccess }: UploadWizardProps
   }, []);
 
   const validateTicketId = (): boolean => {
-    if (service === 'jira') {
+    if (service === "jira") {
       const jiraPattern = /^[A-Z]+-\d+$/;
       return jiraPattern.test(ticketId.trim());
     } else {
@@ -72,9 +82,9 @@ export function UploadWizard({ filePath, onClose, onSuccess }: UploadWizardProps
   const handleUpload = async () => {
     if (!validateTicketId()) {
       setError(
-        service === 'jira'
-          ? 'Invalid Jira ticket ID. Format should be: PROJ-123'
-          : 'Invalid Zendesk ticket ID. Should be a number.'
+        service === "jira"
+          ? "Invalid Jira ticket ID. Format should be: PROJ-123"
+          : "Invalid Zendesk ticket ID. Should be a number.",
       );
       return;
     }
@@ -84,20 +94,22 @@ export function UploadWizard({ filePath, onClose, onSuccess }: UploadWizardProps
 
     try {
       // Get credentials from Keychain
-      const baseUrl = (await invoke('get_credential', {
-        service: service === 'jira' ? 'jira_base_url' : 'zendesk_subdomain',
+      const baseUrl = (await invoke("get_credential", {
+        service: service === "jira" ? "jira_base_url" : "zendesk_subdomain",
       })) as string | null;
 
-      const email = (await invoke('get_credential', {
-        service: service === 'jira' ? 'jira_email' : 'zendesk_email',
+      const email = (await invoke("get_credential", {
+        service: service === "jira" ? "jira_email" : "zendesk_email",
       })) as string | null;
 
-      const apiToken = (await invoke('get_credential', {
-        service: service === 'jira' ? 'jira_api_token' : 'zendesk_api_token',
+      const apiToken = (await invoke("get_credential", {
+        service: service === "jira" ? "jira_api_token" : "zendesk_api_token",
       })) as string | null;
 
       if (!baseUrl || !email || !apiToken) {
-        setError('Credentials not configured. Please configure in Settings first.');
+        setError(
+          "Credentials not configured. Please configure in Settings first.",
+        );
         setIsUploading(false);
         return;
       }
@@ -112,20 +124,26 @@ export function UploadWizard({ filePath, onClose, onSuccess }: UploadWizardProps
         api_token: apiToken,
       };
 
-      const result = (await invoke('upload_screenshot', {
+      const result = (await invoke("upload_screenshot", {
         request: uploadRequest,
       })) as UploadResult;
 
       setSuccessUrl(result.ticket_url);
-      onSuccess(result.ticket_url);
+      onSuccess({
+        ticketId: ticketId.trim(),
+        ticketUrl: result.ticket_url,
+        service,
+      });
     } catch (err) {
       const errorMsg = String(err);
-      if (errorMsg.includes('UPLOAD_AUTH_FAILED')) {
-        setError('Authentication failed. Please update your credentials in Settings.');
-      } else if (errorMsg.includes('TICKET_NOT_FOUND')) {
-        setError('Ticket not found. Please check the ticket ID and try again.');
-      } else if (errorMsg.includes('NETWORK_ERROR')) {
-        setError('Network error. Please check your connection and try again.');
+      if (errorMsg.includes("UPLOAD_AUTH_FAILED")) {
+        setError(
+          "Authentication failed. Please update your credentials in Settings.",
+        );
+      } else if (errorMsg.includes("TICKET_NOT_FOUND")) {
+        setError("Ticket not found. Please check the ticket ID and try again.");
+      } else if (errorMsg.includes("NETWORK_ERROR")) {
+        setError("Network error. Please check your connection and try again.");
       } else {
         setError(`Upload failed: ${errorMsg}`);
       }
@@ -138,9 +156,9 @@ export function UploadWizard({ filePath, onClose, onSuccess }: UploadWizardProps
     if (successUrl) {
       try {
         await writeText(successUrl);
-        alert('URL copied to clipboard!');
+        alert("URL copied to clipboard!");
       } catch (err) {
-        console.error('Failed to copy URL:', err);
+        console.error("Failed to copy URL:", err);
       }
     }
   };
@@ -188,8 +206,8 @@ export function UploadWizard({ filePath, onClose, onSuccess }: UploadWizardProps
                 type="radio"
                 name="service"
                 value="jira"
-                checked={service === 'jira'}
-                onChange={() => setService('jira')}
+                checked={service === "jira"}
+                onChange={() => setService("jira")}
               />
               Jira
             </label>
@@ -198,8 +216,8 @@ export function UploadWizard({ filePath, onClose, onSuccess }: UploadWizardProps
                 type="radio"
                 name="service"
                 value="zendesk"
-                checked={service === 'zendesk'}
-                onChange={() => setService('zendesk')}
+                checked={service === "zendesk"}
+                onChange={() => setService("zendesk")}
               />
               Zendesk
             </label>
@@ -210,14 +228,14 @@ export function UploadWizard({ filePath, onClose, onSuccess }: UploadWizardProps
           <label>
             Ticket ID
             <span className="hint">
-              {service === 'jira' ? '(e.g., PROJ-123)' : '(e.g., 12345)'}
+              {service === "jira" ? "(e.g., PROJ-123)" : "(e.g., 12345)"}
             </span>
           </label>
           <input
             type="text"
             value={ticketId}
             onChange={(e) => setTicketId(e.target.value)}
-            placeholder={service === 'jira' ? 'PROJ-123' : '12345'}
+            placeholder={service === "jira" ? "PROJ-123" : "12345"}
             disabled={isUploading}
           />
         </div>
@@ -236,9 +254,10 @@ export function UploadWizard({ filePath, onClose, onSuccess }: UploadWizardProps
         {error && (
           <div className="upload-error">
             <p>{error}</p>
-            {error.includes('credentials') && (
+            {error.includes("credentials") && (
               <p className="error-hint">
-                Configure your {service} credentials in Settings to upload screenshots.
+                Configure your {service} credentials in Settings to upload
+                screenshots.
               </p>
             )}
           </div>
@@ -250,9 +269,13 @@ export function UploadWizard({ filePath, onClose, onSuccess }: UploadWizardProps
             onClick={handleUpload}
             disabled={isUploading || !ticketId.trim()}
           >
-            {isUploading ? 'Uploading...' : 'Upload'}
+            {isUploading ? "Uploading..." : "Upload"}
           </button>
-          <button className="btn-secondary" onClick={onClose} disabled={isUploading}>
+          <button
+            className="btn-secondary"
+            onClick={onClose}
+            disabled={isUploading}
+          >
             Cancel
           </button>
         </div>

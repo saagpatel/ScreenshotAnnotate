@@ -1,23 +1,31 @@
+import { CAPTURE_HOTKEY_KEYS } from "../lib/hotkeys";
+
 interface KeyboardShortcutsHelpProps {
   onClose: () => void;
 }
 
 export function KeyboardShortcutsHelp({ onClose }: KeyboardShortcutsHelpProps) {
   const shortcuts = [
-    { keys: ['⌘', '⇧', '5'], description: 'Capture screenshot' },
-    { keys: ['A'], description: 'Switch to Arrow tool' },
-    { keys: ['R'], description: 'Switch to Rectangle tool' },
-    { keys: ['T'], description: 'Switch to Text tool' },
-    { keys: ['F'], description: 'Switch to Freehand tool' },
-    { keys: ['⌘', 'Z'], description: 'Undo' },
-    { keys: ['⌘', '⇧', 'Z'], description: 'Redo' },
-    { keys: ['⌘', 'S'], description: 'Save screenshot' },
-    { keys: ['Esc'], description: 'Cancel / Close' },
+    {
+      keys: [...CAPTURE_HOTKEY_KEYS],
+      description: "Capture screenshot (when available)",
+    },
+    { keys: ["A"], description: "Switch to Arrow tool" },
+    { keys: ["R"], description: "Switch to Rectangle tool" },
+    { keys: ["T"], description: "Switch to Text tool" },
+    { keys: ["F"], description: "Switch to Freehand tool" },
+    { keys: ["⌘", "Z"], description: "Undo" },
+    { keys: ["⌘", "⇧", "Z"], description: "Redo" },
+    { keys: ["⌘", "S"], description: "Save screenshot" },
+    { keys: ["Esc"], description: "Cancel / Close" },
   ];
 
   return (
     <div className="keyboard-shortcuts-overlay" onClick={onClose}>
-      <div className="keyboard-shortcuts-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="keyboard-shortcuts-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="shortcuts-header">
           <h3>Keyboard Shortcuts</h3>
           <button className="close-btn" onClick={onClose}>
@@ -31,7 +39,9 @@ export function KeyboardShortcutsHelp({ onClose }: KeyboardShortcutsHelpProps) {
                 {shortcut.keys.map((key, i) => (
                   <span key={i}>
                     <kbd>{key}</kbd>
-                    {i < shortcut.keys.length - 1 && <span className="key-separator">+</span>}
+                    {i < shortcut.keys.length - 1 && (
+                      <span className="key-separator">+</span>
+                    )}
                   </span>
                 ))}
               </div>

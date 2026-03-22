@@ -41,10 +41,5 @@
       "providerShortName": null,
       "signingIdentity": null
     }
-  },
-  "plugins": {
-    "globalShortcut": {
-      "shortcuts": ["CmdOrCtrl+Shift+5"]
-    }
   }
 }
