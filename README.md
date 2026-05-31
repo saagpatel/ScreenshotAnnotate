@@ -9,11 +9,14 @@ ScreenshotAnnotate collapses the manual annotation workflow — grab screenshot,
 ## Features
 
 - **Global hotkey** — `⌘⇧5` triggers native macOS screenshot capture with interactive region selection from anywhere on the desktop
-- **4 annotation tools** — Arrow (with arrowhead), Rectangle, Text, and Freehand; switch with `A`/`R`/`T`/`F`
+- **5 annotation tools** — Arrow (with arrowhead), Rectangle, Text, Freehand, and Redact; switch with `A`/`R`/`T`/`F` (Redact has no shortcut)
 - **50-step undo/redo** — full undo stack with `⌘Z` / `⇧⌘Z`; never lose work to a misplaced annotation
 - **Color and thickness** — 4 preset colors plus custom hex input; 1–8px stroke width control
-- **PNG export** — save annotated screenshots to disk; OCR via Tesseract.js extracts text from screenshots for searchable history
-- **Thumbnail gallery** — searchable history of all saved screenshots with storage usage tracking and LRU eviction at 500MB
+- **PNG export** — save annotated screenshots to disk
+- **PII detection** — OCR via Tesseract.js scans screenshots for emails, phone numbers, IPs, and credit card numbers; auto-highlights regions for one-click redaction with blur, pixelate, or black-box styles
+- **Upload wizard** — attach annotated screenshots directly to support tickets; service credentials stored securely in the macOS keychain
+- **Annotation templates** — 3 built-in templates (Error Highlight, Click Here, Step by Step) apply pre-positioned arrows, rectangles, and text labels scaled to image dimensions
+- **Thumbnail gallery** — searchable history of all saved screenshots (search by ticket ID or date) with storage usage tracking and LRU eviction at 500 MB
 
 ## Quick Start
 
@@ -53,16 +56,16 @@ Grant screen recording permission when prompted on first launch — macOS requir
 |-------|------------|
 | Desktop shell | Tauri 2 |
 | Frontend | React 19, TypeScript 5.8, Vite 7 |
-| Styling | Tailwind CSS 4 |
-| State | Zustand 5 |
-| Canvas | HTML5 Canvas 2D API |
+| Styling | CSS custom properties (App.css) |
+| State | React hooks (useState) |
+| Canvas | SVG overlay |
 | OCR | Tesseract.js 7 |
 | Clipboard | tauri-plugin-clipboard-manager |
-| Tests | Vitest 3, Testing Library |
+| Tests | Vitest 3 |
 
 ## Architecture
 
-The annotation canvas is a layered HTML5 Canvas: a base layer holds the captured screenshot bitmap, a draw layer accumulates completed annotations as Path2D objects, and a preview layer renders the in-progress stroke. The undo stack stores serialized annotation commands, not pixel snapshots — so memory overhead stays flat regardless of image size. The Rust backend handles the macOS screenshot capture API and file I/O; Tesseract.js OCR runs in a Web Worker to avoid blocking annotation interactions.
+The annotation canvas is an `<img>` element (the screenshot) with a transparent SVG overlay. Completed and in-progress annotations are SVG primitives — `<line>`/`<polygon>` for arrows, `<rect>` for rectangles and redaction boxes, `<path>` for freehand strokes, `<text>` for labels. The undo stack stores snapshots of the annotation array, not pixel data — memory overhead stays flat regardless of image size. The Rust backend handles macOS screenshot capture and file I/O; Tesseract.js OCR runs in a Web Worker for PII detection.
 
 ## License
 
