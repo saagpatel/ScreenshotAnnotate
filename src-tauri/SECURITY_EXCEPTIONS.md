@@ -6,7 +6,7 @@ Current exceptions are limited to informational transitive advisories
 (`unmaintained` / `unsound`) that are pulled in by upstream cross-platform
 dependencies and are not presently actionable without major upstream changes.
 
-The exception list is codified in `/Users/d/Projects/ScreenshotAnnotate/scripts/cargo_audit.sh`.
+The exception list is codified in `scripts/cargo_audit.sh`.
 
 Review policy:
 - Re-run `cargo audit --json` after every Tauri dependency upgrade.
