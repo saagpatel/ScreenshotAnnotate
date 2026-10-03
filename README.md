@@ -22,8 +22,8 @@ ScreenshotAnnotate collapses the manual annotation workflow — grab screenshot,
 
 ### Prerequisites
 
-- macOS 13+ (Ventura or later)
-- Node.js 26+ (or Node 22.12+ on the 22 line / Node 24+), matching the locked Vite and Vitest engines
+- macOS with the Tauri 2 native prerequisites (no minimum macOS version is configured in this repository)
+- Node.js 22.12+ on the 22 line, 24.x, or 26+, matching the intersection of the locked Vite and Vitest engines
 - Current stable Rust (via [rustup](https://rustup.rs)) and Tauri 2 macOS prerequisites
 - Xcode Command Line Tools
 
@@ -71,13 +71,13 @@ For changed annotation or export behavior, use a disposable macOS account and a 
 | Layer | Technology |
 |-------|------------|
 | Desktop shell | Tauri 2 |
-| Frontend | React 19, TypeScript 5.8, Vite 7 |
+| Frontend | React 19, TypeScript 7.0, Vite 8 |
 | Styling | CSS custom properties (App.css) |
 | State | React hooks (useState) |
 | Canvas | SVG overlay |
 | OCR | Tesseract.js 7 |
 | Clipboard | tauri-plugin-clipboard-manager |
-| Tests | Vitest 3 |
+| Tests | Vitest 5 |
 
 ## Architecture
 
