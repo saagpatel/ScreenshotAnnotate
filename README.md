@@ -23,8 +23,8 @@ ScreenshotAnnotate collapses the manual annotation workflow — grab screenshot,
 ### Prerequisites
 
 - macOS 13+ (Ventura or later)
-- Node.js 18+
-- Rust 1.70+ (via [rustup](https://rustup.rs))
+- Node.js 26+ (or Node 22.12+ on the 22 line / Node 24+), matching the locked Vite and Vitest engines
+- Current stable Rust (via [rustup](https://rustup.rs)) and Tauri 2 macOS prerequisites
 - Xcode Command Line Tools
 
 ### Installation
@@ -32,7 +32,7 @@ ScreenshotAnnotate collapses the manual annotation workflow — grab screenshot,
 ```bash
 git clone https://github.com/saagpatel/ScreenshotAnnotate.git
 cd ScreenshotAnnotate
-npm install
+npm ci
 ```
 
 ### Usage
@@ -49,6 +49,22 @@ npm run tauri build
 ```
 
 Grant screen recording permission when prompted on first launch — macOS requires this for the screenshot capture API.
+
+## Verification
+
+Run from the repository root after `npm ci` (uses `package-lock.json`). A safe focused check uses synthetic geometry and never captures a screen:
+
+```bash
+npm test -- src/lib/geometry.test.ts
+# Broader frontend unit tests (image-loader tests also use mocks):
+npm test
+# TypeScript checking and frontend bundle; does not launch Tauri:
+npm run build
+```
+
+There are no configured lint/format scripts. For Rust changes, use `cargo check --locked --manifest-path src-tauri/Cargo.toml`; native compilation requires the macOS/Xcode/Rust prerequisites above. `npm run tauri build` packages the desktop app; a frontend build alone does not verify the native shell.
+
+For changed annotation or export behavior, use a disposable macOS account and a synthetic test image: check the affected tool, undo/redo, and PNG output to a temporary folder. Native capture/permission changes require a controlled screen containing only test data. Native launch registers a global shortcut and uses local history; avoid personal screenshots, existing history, keychain credentials, upload endpoints and OCR downloads in a routine verification smoke. `npm run dev` previews the frontend only; native commands require `npm run tauri dev`. No browser automation suite is configured, and pure documentation changes do not require a native or browser walkthrough.
 
 ## Tech Stack
 
