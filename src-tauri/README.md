@@ -12,24 +12,7 @@ A macOS desktop screenshot annotation tool built with Tauri 2 + React 19 that co
 
 ## Installation
 
-### Prerequisites
-
-- macOS 13+ (Ventura or later)
-- Node.js 18+
-- Rust 1.70+ (install via [rustup](https://rustup.rs/))
-
-### Setup
-
-```bash
-# Install dependencies
-npm install
-
-# Run in development mode
-npm run tauri dev
-
-# Build for production
-npm run tauri build
-```
+See the repository-root [setup](../README.md#quick-start) and [verification guide](../README.md#verification). Run npm and Cargo commands from the repository root; native launch needs macOS and controlled test data.
 
 ### First Run Permissions
 
