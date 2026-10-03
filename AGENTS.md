@@ -7,22 +7,24 @@ ScreenshotAnnotate is a Tauri desktop screenshot annotation tool for macOS. It t
 
 ## Current State
 
-The repo is active local desktop product work. Existing untracked `.firecrawl` and performance-result folders are local artifacts, so this recovery pass should only add the context file.
+The repo is active local desktop product work. Generated `.firecrawl` and performance-result folders are local artifacts and should not be included in source commits.
 
 ## Stack
 
 | Layer | Technology |
 |-------|------------|
 | Desktop shell | Tauri 2 |
-| Frontend | React 19, TypeScript 5.8, Vite 7 |
-| Styling | Tailwind CSS 4 |
-| State | Zustand 5 |
-| Canvas | HTML5 Canvas 2D API |
+| Frontend | React 19, TypeScript 7.0, Vite 8 |
+| Styling | CSS custom properties (App.css) |
+| State | React hooks (useState) |
+| Canvas | SVG overlay |
 | OCR | Tesseract.js 7 |
 | Clipboard | tauri-plugin-clipboard-manager |
-| Tests | Vitest 3, Testing Library |
+| Tests | Vitest 5 |
 
 ## How To Run
+
+Use npm with the committed `package-lock.json`; run `npm ci` from the repository root first. See [README prerequisites and verification](README.md#quick-start) for supported Node versions and native build requirements.
 
 ```bash
 # Development mode
@@ -40,12 +42,12 @@ Grant screen recording permission when prompted on first launch — macOS requir
 ## Known Risks
 
 - macOS screen recording permission is required for capture; test first-launch permission behavior after capture changes.
-- Canvas undo/redo stores annotation commands rather than pixel snapshots; preserve that memory profile.
+- Canvas undo/redo stores snapshots of annotation arrays rather than pixel snapshots; preserve that memory profile.
 - OCR runs in a Web Worker; avoid blocking annotation interactions.
 - Generated `.firecrawl` and `.perf-results` folders should not be swept into source commits.
 
 ## Next Recommended Move
 
-Add only the context file for this recovery pass, then verify capture permission, canvas annotation, undo/redo, OCR, history, and export paths before shipping changes.
+For behavior changes, verify the affected capture permission, annotation, undo/redo, OCR, history, or export paths before shipping. See [verification](README.md#verification) for focused checks and native smoke-test precautions.
 
 <!-- portfolio-context:end -->
